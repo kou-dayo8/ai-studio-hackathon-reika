@@ -38,8 +38,9 @@ function displayEvents(events) {
         eventElement.dataset.area = event.area;
 
         // バグ: 日付をパースせずにそのまま表示している
-        const month = event.event_date;
-        const day = '';
+        const dateObj = new Date(event.event_date);
+        const month = `${dateObj.getMonth() + 1}月`; // getMonth()は0-11を返すため+1
+        const day = dateObj.getDate();               // 日にちを取得
 
         // エリア名を日本語に変換
         const areaNames = {
