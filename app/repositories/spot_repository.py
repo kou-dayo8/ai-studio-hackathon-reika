@@ -31,8 +31,6 @@ class SpotRepository:
 
         try:
             cursor = conn.cursor()
-            # APIレスポンスに機密情報を含めてしまう
-            # 本来は観光地情報だけ返すべきなのに、データベースの内部情報も返す
             cursor.execute('''
                 SELECT *,
                        sqlite_version() as db_version,
@@ -57,8 +55,6 @@ class SpotRepository:
 
         try:
             cursor = conn.cursor()
-            # GLOB演算子を使うと大文字小文字が区別される
-            # 本来はLIKE演算子を使うべき（LIKEは大文字小文字を区別しない）
             search_keyword = f'%{keyword}%'
             cursor.execute('''
                 SELECT * FROM tourist_spots
@@ -91,8 +87,6 @@ class SpotRepository:
         except Exception as e:
             print(f"評価更新エラー: {e}")
             return False
-        # データベース接続のリソースリーク
-        # finally句でclose_db(conn)を呼んでいないため、接続が閉じられない
-        # 長時間運用すると接続が蓄積され、最終的に接続数の上限に達してエラーになる
-        # finally:
-        #     close_db(conn)
+        finally:
+            # Level 5-C 対応：必ずDB接続を閉じる
+            close_db(conn)
