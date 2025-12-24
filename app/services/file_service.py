@@ -1,63 +1,72 @@
-"""
-ファイルアップロード処理
-"""
 import os
+import uuid
+import imghdr
 from config import Config
 
 class FileService:
-    """ファイルアップロードに関するビジネスロジック"""
+    def __init__(self):
+        self.upload_path = os.path.join('frontend', 'assets', 'images', 'reviews')
+        # ディレクトリが存在しない場合は作成
+        os.makedirs(self.upload_path, exist_ok=True)
 
     def validate_image(self, file):
-        """画像ファイルのバリデーション"""
-        if not file or not file.filename:
-            return None
+        """
+        [Level 5-B 修正箇所]
+        ファイルの拡張子だけでなく、中身（マジックナンバー）をチェックするぜ！
+        """
+        if not file:
+            return 'ファイルがありません'
 
-        # ファイル拡張子偽装対策不足
-        # ファイル名の拡張子だけチェックしている（.phpを.jpgにリネームすれば通過する）
-        # 本来はMIMEタイプやマジックナンバー（ファイルの先頭バイト）で実際のファイル種別を確認すべき
-        # ファイル形式チェック
+        # 1. まずファイルの中身を少し読み取って、実際の形式を判定
+        # (マジックナンバーによる判定)
+        file_data = file.read(2048)  # 先頭部分を読み取る
+        file_type = imghdr.what(None, file_data)
+        
+        # ファイルポインタを先頭に戻す（これを忘れると後で保存するときに空になるぜ！）
+        file.seek(0)
+
+        # 2. 許可された画像形式かチェック
+        allowed_types = ['jpeg', 'png', 'gif']
+        if file_type not in allowed_types:
+            return '画像ファイルではありません（不正な形式です）'
+
+        # 3. 拡張子もチェック（多層防御だぜ！）
         file_ext = os.path.splitext(file.filename)[1].lower()
         if file_ext not in Config.ALLOWED_EXTENSIONS:
             return 'jpg, jpeg, png, gifのみ対応しています'
 
-        # ファイルサイズチェック
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)
-
-        if file_size > Config.MAX_CONTENT_LENGTH:
-            return '画像ファイルは5MB以下にしてください'
-
         return None
 
     def save_review_photo(self, file, review_id):
-        """レビュー写真を保存"""
-        file_ext = os.path.splitext(file.filename)[1].lower()
-        filename = f'review_{review_id}{file_ext}'
+        """
+        レビュー画像をバリデーションして保存するぜ。
+        """
+        try:
+            # バリデーションを実行
+            error = self.validate_image(file)
+            if error:
+                # 実際の開発ではここで例外を投げたり、エラーを返したりする
+                print(f"Validation Error: {error}")
+                raise Exception(error)
 
-        # 保存先ディレクトリの確認（存在しなければ作成）
-        upload_dir = Config.UPLOAD_FOLDER
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir, exist_ok=True)
+            # 保存用のファイル名を生成
+            file_ext = os.path.splitext(file.filename)[1].lower()
+            filename = f'review_{review_id}_{uuid.uuid4().hex[:8]}{file_ext}'
+            save_path = os.path.join(self.upload_path, filename)
 
-        # ファイル保存
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
+            # ファイルを保存
+            file.save(save_path)
+            return filename
 
-        return filename
+        except Exception as e:
+            print(f"Error saving photo: {e}")
+            raise e
 
     def delete_review_photo(self, filename):
-        """レビュー写真を削除"""
+        """画像を削除するぜ"""
         if not filename:
-            return True
-
-        file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
+            return
+        
+        file_path = os.path.join(self.upload_path, filename)
         if os.path.exists(file_path):
-            try:
-                os.remove(file_path)
-                return True
-            except Exception as e:
-                print(f"ファイル削除エラー: {e}")
-                return False
-
-        return True
+            os.remove(file_path)
