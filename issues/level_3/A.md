@@ -42,14 +42,65 @@
 `frontend/index.html` 85-92行目、93-100行目、101-108行目
 
 ```html
-<div class="spot-card">
-    <div class="spot-image">草津温泉湯畑</div>  <!-- ← ここを動画埋め込みに変更 -->
-    <div class="spot-content">
-        <h3>草津温泉</h3>
-        <p>日本三名泉の一つ。湯畑を中心に広がる温泉街は、昔ながらの風情を残しています。</p>
-        <a href="spots/kusatsu.html" class="spot-link">詳細を見る →</a>
+<section class="popular-spots">
+    <h2>人気の観光スポット</h2>
+
+    <div class="spot-list">
+
+        <!-- 草津温泉 -->
+        <div class="spot-card">
+            <iframe width="100%" height="200"
+                src="https://www.youtube.com/embed/GrEEoEmmrKs"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                style="display: block;">
+            </iframe>
+
+            <div class="spot-content">
+                <h3>草津温泉</h3>
+                <p>日本三名泉の一つ。湯畑を中心に広がる温泉街は、昔ながらの風情を残しています。</p>
+                <a href="spots/kusatsu.html" class="spot-link">詳細を見る →</a>
+            </div>
+        </div>
+
+        <!-- 富岡製糸場 -->
+        <div class="spot-card">
+            <iframe width="100%" height="200"
+                src="https://www.youtube.com/embed/OFg0mXRNDpI"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                style="display: block;">
+            </iframe>
+
+            <div class="spot-content">
+                <h3>富岡製糸場</h3>
+                <p>日本の近代化を支えた世界遺産。歴史的価値の高い建造物が残されています。</p>
+                <a href="spots/tomioka.html" class="spot-link">詳細を見る →</a>
+            </div>
+        </div>
+
+        <!-- 尾瀬国立公園 -->
+        <div class="spot-card">
+            <iframe width="100%" height="200"
+                src="https://www.youtube.com/embed/o7zDfKZrlJ8"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                style="display: block;">
+            </iframe>
+
+            <div class="spot-content">
+                <h3>尾瀬国立公園</h3>
+                <p>雄大な自然が広がる国立公園。四季折々の景色が楽しめます。</p>
+                <a href="spots/oze.html" class="spot-link">詳細を見る →</a>
+            </div>
+        </div>
+
     </div>
-</div>
+</section>
+
 ```
 
 **正しい実装方法:**
