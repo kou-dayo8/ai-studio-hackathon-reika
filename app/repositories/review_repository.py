@@ -6,26 +6,47 @@ from repositories.database import get_db, close_db
 class ReviewRepository:
     """レビューテーブルへのデータアクセス"""
 
-    def find_by_spot_id(self, spot_id):
-        """観光地IDでレビューを取得"""
+    def find_by_spot_id_with_user(self, spot_id):
+        """
+        観光地IDでレビューとユーザー名をまとめて取得
+        """
         conn = get_db()
         if not conn:
             return []
 
         try:
             cursor = conn.cursor()
-            # N+1クエリ問題
-            # JOINを使わずにレビューだけ取得している
-            # ユーザー名は後でservice層でループして取得することになり、N+1問題が発生する
-            # 本来は JOIN users ON r.user_id = u.user_id でユーザー名も一緒に取得すべき
+            cursor.execute('''
+                SELECT
+                    r.*,
+                    u.name AS user_name
+                FROM reviews r
+                LEFT JOIN users u ON r.user_id = u.user_id
+                WHERE r.spot_id = ?
+                ORDER BY r.created_at DESC
+            ''', (spot_id,))
+            return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            print(f"レビュー取得エラー: {e}")
+            return []
+        finally:
+            close_db(conn)
+
+    def find_by_spot_id(self, spot_id):
+        """観光地IDでレビューを取得（レビュー情報のみ）"""
+        conn = get_db()
+        if not conn:
+            return []
+
+        try:
+            cursor = conn.cursor()
             cursor.execute('''
                 SELECT *
                 FROM reviews
                 WHERE spot_id = ?
                 ORDER BY created_at DESC
             ''', (spot_id,))
-            reviews = [dict(row) for row in cursor.fetchall()]
-            return reviews
+            return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"レビュー取得エラー: {e}")
             return []
@@ -50,8 +71,7 @@ class ReviewRepository:
                 review_data['rating']
             ))
             conn.commit()
-            review_id = cursor.lastrowid
-            return review_id
+            return cursor.lastrowid
         except Exception as e:
             print(f"レビュー作成エラー: {e}")
             return None
@@ -87,7 +107,10 @@ class ReviewRepository:
 
         try:
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM reviews WHERE review_id = ?', (review_id,))
+            cursor.execute(
+                'SELECT * FROM reviews WHERE review_id = ?',
+                (review_id,)
+            )
             review = cursor.fetchone()
             return dict(review) if review else None
         except Exception as e:
@@ -104,7 +127,10 @@ class ReviewRepository:
 
         try:
             cursor = conn.cursor()
-            cursor.execute('DELETE FROM reviews WHERE review_id = ?', (review_id,))
+            cursor.execute(
+                'DELETE FROM reviews WHERE review_id = ?',
+                (review_id,)
+            )
             conn.commit()
             return True
         except Exception as e:
