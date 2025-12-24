@@ -38,6 +38,11 @@ async function submitReview(event) {
 
     // ここにレビュー内容の空チェック処理が必要
     // text.trim() で前後の空白を除去してチェック
+    // --- レビュー内容の空白チェックを追加 ---
+    if (!text.trim()) {
+        alert("レビュー内容を入力してください。");
+        return; // 処理を中断
+    }
 }
 ```
 
